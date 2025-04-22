@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QFont
 import os
+import json
 import ipaddress
 from core.discovery import scan_subnet
 from core.port_scanner import scan_port
@@ -13,7 +14,14 @@ from core.service_probe import guess_service
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        # 初始化扫描历史
+        self.scan_history = []
 
+        # 加载历史记录
+        self.load_scan_history()
+
+        # 初始化扫描结果
+        self.latest_scan_results = []
         self.setWindowTitle("Nmap 可视化扫描器")
         self.setMinimumSize(1000, 700)
         self.load_stylesheet("./ui/style/mac_light.qss")
@@ -67,7 +75,8 @@ class MainWindow(QMainWindow):
             "Nmap Output": "扫描输出",
             "Ports / Hosts": "端口与服务",
             "Topology": "拓扑结构",
-            "Host Details": "主机操作系统",
+            "Host Details": "主机详情",
+            "Scan History": "扫描历史", 
         }
 
         for key, name in tab_names.items():
@@ -104,6 +113,48 @@ class MainWindow(QMainWindow):
         # 保存最新扫描结果（用于主机详情）
         self.latest_scan_results = []
 
+    def save_scan_history(self):
+        # 保存扫描历史到 scan_results.json 文件
+        try:
+            with open("./data/scan_results.json", "w", encoding="utf-8") as f:
+                json.dump(self.scan_history, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"保存扫描历史时发生错误: {e}")
+
+    def load_scan_history(self):
+        # 加载扫描历史记录从 scan_results.json 文件
+        if os.path.exists("./data/scan_results.json"):
+            try:
+                with open("./data/scan_results.json", "r", encoding="utf-8") as f:
+                    self.scan_history = json.load(f)
+            except Exception as e:
+                print(f"加载扫描历史时发生错误: {e}")
+
+    def display_scan_history(self):
+        # 显示扫描历史
+        self.output_tabs["Scan History"].clear()
+        self.output_tabs["Scan History"].append("✅ 扫描历史记录：\n")
+
+        if not self.scan_history:
+            self.output_tabs["Scan History"].append("🔹 当前没有扫描记录。")
+            return
+
+        for idx, history in enumerate(self.scan_history, start=1):
+            self.output_tabs["Scan History"].append(f"🔸 扫描 {idx} - {history}\n")
+
+    def handle_scan_result(self, results):
+        # 将扫描结果添加到历史记录
+        scan_record = {
+            "ip": self.latest_scan_results[0].get('ip'),
+            "scan_type": self.latest_scan_results[0].get('scan_type'),
+            "results": results
+        }
+        self.save_scan_history()
+        self.scan_history.append(scan_record)
+
+        # 保存扫描历史到文件
+
+
     def setup_toolbar(self):
         toolbar = QToolBar("工具栏")
         toolbar.setMovable(False)
@@ -116,6 +167,18 @@ class MainWindow(QMainWindow):
         theme_action = QAction("🎨 切换主题", self)
         theme_action.triggered.connect(self.toggle_theme)
         toolbar.addAction(theme_action)
+
+    def display_scan_history(self):
+        # 显示扫描历史
+        self.output_tabs["Scan History"].clear()
+        self.output_tabs["Scan History"].append("✅ 扫描历史记录：\n")
+
+        if not self.scan_history:
+            self.output_tabs["Scan History"].append("🔹 当前没有扫描记录。")
+            return
+
+        for idx, history in enumerate(self.scan_history, start=1):
+            self.output_tabs["Scan History"].append(f"🔸 扫描 {idx} - {history}\n")
 
     def draw_topology_graph(self):
         if not hasattr(self, "topology_figure"):
@@ -193,6 +256,7 @@ class MainWindow(QMainWindow):
                 if item.get("hostname"):
                     line += f" ({item['hostname']})"
                 self.output_tabs["Nmap Output"].append(line)
+        self.handle_scan_result(results)
 
     def display_port_results(self, results):
         self.latest_scan_results = results
@@ -205,7 +269,7 @@ class MainWindow(QMainWindow):
             if item.get("hostname"):
                 line += f" ({item['hostname']})"
             self.output_tabs["Nmap Output"].append(line)
-
+        self.handle_scan_result(results)
     # 展示端口与服务的结果
     def display_service_results(self, results):
         self.latest_scan_results = results
@@ -230,6 +294,7 @@ class MainWindow(QMainWindow):
                     self.output_tabs["Ports / Hosts"].append(line)
                 
                 self.output_tabs["Ports / Hosts"].append("")  # 空行分隔不同的IP
+        self.handle_scan_result(results)
 
     def on_tab_changed(self, index):
         line = ""
@@ -252,6 +317,8 @@ class MainWindow(QMainWindow):
             self.draw_topology_graph()
         elif tab_name == "端口与服务":
             self.display_service_results(self.latest_scan_results)
+        elif tab_name == "扫描历史":
+            self.display_scan_history() 
 
 
 class ScanThread(QThread):

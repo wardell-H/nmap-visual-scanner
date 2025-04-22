@@ -1,6 +1,15 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, List, Dict
 import ipaddress
+import sys
+import os
+
+def resource_path(relative_path):
+    """获取打包后的资源路径"""
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 def normalize_subnet(subnet: str) -> List[str]:
     """
     规范化 CIDR 格式子网，返回该子网内的所有 IP 地址。

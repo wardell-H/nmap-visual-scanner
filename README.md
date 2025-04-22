@@ -66,6 +66,14 @@ nmap-visual-scanner/
 ├── data/                  # 运行时数据保存（扫描历史/缓存等）
 │   └── scan_results.json
 
-├── tests/                 # 单元测试（可选）
+├── tests/                 # 单元测试
 │   └── test_scanner.py
 ```
+
+
+## TODO List
+
+- [ ] 操作系统识别有问题
+- [ ] 打包之后无法点击端口（会神奇闪退）
+- [ ] 打包之后无法更换ui
+
