@@ -9,7 +9,7 @@ import ipaddress
 from core.discovery import scan_subnet
 from core.port_scanner import scan_port
 from core.os_fingerprint import os_fingerprint
-
+from core.service_probe import guess_service
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
         label_cmd = QLabel("生成命令：")
         command_layout.addWidget(label_cmd)
 
-        self.command_line = QLineEdit("nmap -T4 -A -v")
+        self.command_line = QLineEdit("")
         self.command_line.setReadOnly(True)
         self.command_line.setFont(QFont("Courier New", 10))
         self.command_line.setStyleSheet("background-color: #f4f4f4;")
@@ -65,10 +65,9 @@ class MainWindow(QMainWindow):
 
         tab_names = {
             "Nmap Output": "扫描输出",
-            "Ports / Hosts": "端口 / 主机",
+            "Ports / Hosts": "端口与服务",
             "Topology": "拓扑结构",
-            "Host Details": "主机详情",
-            "Scans": "扫描历史"
+            "Host Details": "主机操作系统",
         }
 
         for key, name in tab_names.items():
@@ -92,7 +91,7 @@ class MainWindow(QMainWindow):
 
             tab.setLayout(layout)
             self.tab_widget.addTab(tab, name)
-            self.output_tabs[key] = text_edit
+            # self.output_tabs[key] = text_edit
 
         main_layout.addWidget(self.tab_widget)
 
@@ -207,6 +206,31 @@ class MainWindow(QMainWindow):
                 line += f" ({item['hostname']})"
             self.output_tabs["Nmap Output"].append(line)
 
+    # 展示端口与服务的结果
+    def display_service_results(self, results):
+        self.latest_scan_results = results
+        self.output_tabs["Ports / Hosts"].clear()
+        self.output_tabs["Ports / Hosts"].append("✅ 扫描完成，结果如下：\n")
+
+        # 遍历每个扫描结果
+        for item in results:
+            ip = item.get("ip", "未知IP")
+            open_ports = item.get("open_ports", [])
+
+            if open_ports:
+                self.output_tabs["Ports / Hosts"].append(f"🔹 {ip} - 开放端口与服务：")
+                
+                # 如果 open_ports 只是端口号列表，则直接迭代端口号
+                for port in open_ports:
+                    # 使用 guess_service 函数获取服务名称
+                    service = guess_service(port)
+                    
+                    # 更加可视化地输出端口和服务对应关系
+                    line = f"    🌐 端口 {port} → {service}"
+                    self.output_tabs["Ports / Hosts"].append(line)
+                
+                self.output_tabs["Ports / Hosts"].append("")  # 空行分隔不同的IP
+
     def on_tab_changed(self, index):
         line = ""
         tab_name = self.tab_widget.tabText(index)
@@ -226,6 +250,9 @@ class MainWindow(QMainWindow):
                 self.output_tabs["Host Details"].append(line)
         elif tab_name == "拓扑结构":
             self.draw_topology_graph()
+        elif tab_name == "端口与服务":
+            self.display_service_results(self.latest_scan_results)
+
 
 class ScanThread(QThread):
     result_signal = pyqtSignal(list)

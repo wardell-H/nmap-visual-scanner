@@ -37,11 +37,11 @@ pip install -r requirements.txt
 python main.py
 ```
 
-许可证
+## 许可证
 本项目采用 MIT 协议，详见 LICENSE 文件。
 
 
-项目结构
+## 项目结构
 ```
 nmap-visual-scanner/
 ├── main.py                # 应用程序入口，加载 PyQt 主界面
