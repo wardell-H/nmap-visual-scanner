@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# PyInstaller
+dist/
+build/
+*.spec
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Qt Designer generated files (optional)
+*.ui.py
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
