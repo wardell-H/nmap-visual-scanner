@@ -1,2 +1,4 @@
 PyQt5>=5.15.0
-scapy>=2.5.0
+matplotlib>=3.5.0
+ipaddress
+networkx

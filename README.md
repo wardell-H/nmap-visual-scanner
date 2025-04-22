@@ -7,17 +7,17 @@
 - ✅ 主机发现（Ping / TCP Ping）
 - ✅ 端口扫描（TCP / UDP）
 - ✅ 简易服务识别（如 HTTP、FTP、SSH 等）
-- ✅ （可选）操作系统指纹识别
-- ✅ 扫描结果实时展示、自动化更新界面
+- ✅ 操作系统指纹识别
+- ✅ 扫描结果实时展示
 - ✅ 支持多线程 / 异步扫描加速
 - ✅ 跨平台支持：Windows / Linux
 
 ## 技术栈
 
-- Python 3.8+
+- Python 3.10
 - PyQt5（图形界面）
 - socket / scapy（实现网络协议）
-- threading / asyncio（提升扫描性能）
+- concurrent.futures（并发扫描任务调度）
 
 ## 快速开始
 
@@ -42,6 +42,7 @@ python main.py
 
 
 项目结构
+```
 nmap-visual-scanner/
 ├── main.py                # 应用程序入口，加载 PyQt 主界面
 ├── README.md              # 项目说明
@@ -67,3 +68,4 @@ nmap-visual-scanner/
 
 ├── tests/                 # 单元测试（可选）
 │   └── test_scanner.py
+```

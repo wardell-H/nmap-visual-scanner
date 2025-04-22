@@ -2,6 +2,7 @@ from core.discovery import scan_subnet
 from core.port_scanner import scan_port
 import ipaddress
 from typing import Callable, List, Dict
+from core.os_fingerprint import os_fingerprint
 # scan_results = scan_subnet("100.80.179", method="icmp")  # 使用 ICMP
 # # scan_subnet("100.80.179", method="tcp")   # 使用 TCP Ping（默认端口）
 # # scan_subnet("100.80.179", method="ping")  # 使用系统 ping 命令
@@ -28,7 +29,12 @@ from typing import Callable, List, Dict
 # print(ip_list)
 
 
-subnet = "100.80.179.0/24"
-result = scan_port(subnet)
-for entry in result:
-    print(f"{entry['ip']} 开放端口: {entry['open_ports']}")
+# subnet = "100.80.179.0/24"
+# result = scan_port(subnet)
+# for entry in result:
+#     print(f"{entry['ip']} 开放端口: {entry['open_ports']}")
+
+
+ip = "127.0.0.1"  # 这里指定要识别的目标 IP
+result = os_fingerprint(ip)
+print(f"操作系统识别结果: {result}")
