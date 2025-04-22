@@ -3,8 +3,8 @@ import platform
 import subprocess
 from scapy.all import IP, ICMP, sr1, TCP
 from typing import List
-from core.utils import concurrent_scan
-import ipaddress
+from core.utils import concurrent_scan,normalize_subnet
+
 def is_alive_icmp(ip: str, timeout: float = 1.0) -> bool:
     """使用 ICMP 判断主机是否存活（需要管理员权限）"""
     try:
@@ -44,19 +44,7 @@ def ping_cross_platform(ip: str) -> bool:
     except Exception:
         return False
 
-def normalize_subnet(subnet: str) -> List[str]:
-    """
-    规范化 CIDR 格式子网，返回该子网内的所有 IP 地址。
-    :param subnet: CIDR 格式的子网，如 "100.80.179.0/24"
-    :return: 包含所有 IP 地址的列表
-    """
-    try:
-        # 使用 ipaddress 模块解析 CIDR 子网
-        network = ipaddress.IPv4Network(subnet, strict=False)
-        # 返回子网中的所有 IP 地址
-        return [str(ip) for ip in network.hosts()]  # network.hosts() 会排除网络地址和广播地址
-    except ValueError:
-        raise ValueError(f"无效的子网格式: {subnet}")
+
 
 
 def scan_subnet(subnet_prefix: str, method: str = "icmp", timeout: float = 1.0, max_workers: int = 100) -> List[str]:

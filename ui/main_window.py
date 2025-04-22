@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QFont
 from core.discovery import scan_subnet
+from core.port_scanner import scan_port
 import os
 import ipaddress
 
@@ -32,7 +33,7 @@ class MainWindow(QMainWindow):
 
         self.target_input = QLineEdit()
 
-        self.target_input.setPlaceholderText("例如：192.168.1.1 或 example.com")
+        self.target_input.setPlaceholderText("例如：192.168.1.0/24")
         input_layout.addWidget(self.target_input)
 
         label_profile = QLabel("扫描配置：")
@@ -128,8 +129,6 @@ class MainWindow(QMainWindow):
         else:
             print(f"⚠️ 样式文件未找到：{path}")
 
-
-
     def on_scan_clicked(self):
         target = self.target_input.text().strip()
         profile = self.profile_box.currentText()
@@ -139,14 +138,22 @@ class MainWindow(QMainWindow):
             return
 
         self.command_line.setText(f"正在扫描：{target}，配置：{profile}")
-        self.output_tabs["Nmap Output"].append(f"📡 正在扫描目标：{target}")
+        self.output_tabs["Nmap Output"].append(f"📡 正在扫描目标：{target}，配置：{profile}")
 
-        # 启动后台扫描线程
-        self.thread = ScanThread(target)
-        self.thread.result_signal.connect(self.display_results)
+        # 判断是主机扫描还是端口扫描
+        if profile == "Ping 扫描":
+            self.thread = ScanThread(target, scan_type="host")
+            self.thread.result_signal.connect(self.display_ping_results)
+        elif profile == "深度扫描":
+            self.thread = ScanThread(target, scan_type="port")
+            self.thread.result_signal.connect(self.display_port_results)
+        else:  # 默认快速扫描，做一个简单的端口扫描
+            self.thread = ScanThread(target, scan_type="port", scan_ports="80,443")
+
+        
         self.thread.start()
 
-    def display_results(self, results):
+    def display_ping_results(self, results):
         self.output_tabs["Nmap Output"].append("✅ 扫描完成，结果如下：\n")
         for item in results:
             if item['status'] == 'UP':  # 只处理在线主机
@@ -154,16 +161,37 @@ class MainWindow(QMainWindow):
                 if item.get("hostname"):
                     line += f" ({item['hostname']})"
                 self.output_tabs["Nmap Output"].append(line)
-
-
-## 主机扫描
+                
+    def display_port_results(self, results):
+        self.output_tabs["Nmap Output"].append("✅ 扫描完成，结果如下：\n")
+        for item in results:
+            if "open_ports" in item and item["open_ports"]:
+                # 如果有开放端口
+                line = f"{item['ip']} - 🟢在线, 开放端口: {', '.join(map(str, item['open_ports']))}"
+            else:
+                # 如果没有开放端口
+                line = f"{item['ip']} - 🔴离线 或 无开放端口"
+            
+            # 如果有主机名，则显示
+            if item.get("hostname"):
+                line += f" ({item['hostname']})"
+            
+            # 显示到文本框
+            self.output_tabs["Nmap Output"].append(line)
 class ScanThread(QThread):
     result_signal = pyqtSignal(list)
 
-    def __init__(self, target):
+    def __init__(self, target, scan_type="port", scan_ports=None):
         super().__init__()
         self.target = target
+        self.scan_type = scan_type  # "host" 或 "port"
+        self.scan_ports = scan_ports  # 如果是端口扫描，需要传递端口范围
 
     def run(self):
-        results = scan_subnet(self.target)
+        if self.scan_type == "host":
+            # 执行主机扫描
+            results = scan_subnet(self.target)
+        elif self.scan_type == "port":
+            # 执行端口扫描
+            results = scan_port(self.target)
         self.result_signal.emit(results)
