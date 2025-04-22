@@ -1,0 +1,66 @@
+QMainWindow {
+    background-color: #1e1e1e;
+}
+
+QLabel {
+    color: #d4d4d4; /* 保持灰色字体，确保与黑色背景对比 */
+    font-size: 14px;
+}
+
+QGroupBox {
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    margin-top: 10px;
+    background-color: #252526; /* 深灰背景 */
+    padding: 10px;
+}
+
+QLineEdit, QComboBox {
+    background-color: #2d2d30;
+    color: #d4d4d4; /* 使用灰色字体以确保可见性 */
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+QPushButton {
+    background-color: #0e639c;
+    color: white;
+    padding: 6px 14px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+QPushButton:hover {
+    background-color: #1177bb;
+}
+
+QTabWidget::pane {
+    border: 1px solid #3c3c3c;
+    background-color: #1e1e1e;
+}
+
+QTabBar::tab {
+    background: #2d2d30;
+    color: #d4d4d4; /* 灰色字体，确保可见性 */
+    padding: 6px 12px;
+    border: 1px solid #3c3c3c;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background: #1e1e1e;
+    border: 1px solid #007acc;
+    color: #ffffff; /* 白色字体，选中的标签可见 */
+}
+
+QTextEdit {
+    background-color: #1e1e1e;
+    color: #d4d4d4; /* 使用灰色字体确保可见 */
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+}
