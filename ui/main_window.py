@@ -2,9 +2,11 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,QToolBar, QAction,
     QLabel, QPushButton, QTextEdit, QLineEdit, QTabWidget, QComboBox, QGroupBox
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QFont
+from core.discovery import scan_subnet
 import os
+import ipaddress
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -126,13 +128,42 @@ class MainWindow(QMainWindow):
         else:
             print(f"⚠️ 样式文件未找到：{path}")
 
+
+
     def on_scan_clicked(self):
         target = self.target_input.text().strip()
         profile = self.profile_box.currentText()
 
-        if target:
-            command = f"nmap -T4 -A -v {target}"
-            self.command_line.setText(command)
-            self.output_tabs["Nmap Output"].append(f"📡 正在扫描目标：{target}")
-        else:
+        if not target:
             self.output_tabs["Nmap Output"].append("❗ 请先输入要扫描的目标地址。")
+            return
+
+        self.command_line.setText(f"正在扫描：{target}，配置：{profile}")
+        self.output_tabs["Nmap Output"].append(f"📡 正在扫描目标：{target}")
+
+        # 启动后台扫描线程
+        self.thread = ScanThread(target)
+        self.thread.result_signal.connect(self.display_results)
+        self.thread.start()
+
+    def display_results(self, results):
+        self.output_tabs["Nmap Output"].append("✅ 扫描完成，结果如下：\n")
+        for item in results:
+            if item['status'] == 'UP':  # 只处理在线主机
+                line = f"{item['ip']} - 🟢在线"
+                if item.get("hostname"):
+                    line += f" ({item['hostname']})"
+                self.output_tabs["Nmap Output"].append(line)
+
+
+## 主机扫描
+class ScanThread(QThread):
+    result_signal = pyqtSignal(list)
+
+    def __init__(self, target):
+        super().__init__()
+        self.target = target
+
+    def run(self):
+        results = scan_subnet(self.target)
+        self.result_signal.emit(results)

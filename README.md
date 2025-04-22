@@ -39,3 +39,31 @@ python main.py
 
 许可证
 本项目采用 MIT 协议，详见 LICENSE 文件。
+
+
+项目结构
+nmap-visual-scanner/
+├── main.py                # 应用程序入口，加载 PyQt 主界面
+├── README.md              # 项目说明
+├── LICENSE                # MIT 许可证
+├── requirements.txt       # 项目依赖
+├── .gitignore             # Git 忽略文件
+
+├── core/                  # 核心扫描功能（Nmap 功能的 Python 实现）
+│   ├── discovery.py       # 主机发现（ICMP Ping, TCP Ping）
+│   ├── port_scanner.py    # TCP/UDP 端口扫描
+│   ├── service_probe.py   # 协议识别、Banner抓取
+│   ├── os_fingerprint.py  # 操作系统识别（可选）
+│   └── utils.py           # 公共工具函数（如 IP 处理、多线程等）
+
+├── ui/                    # 图形界面模块（PyQt 界面）
+│   ├── main_window.py     # 主窗口逻辑
+│   ├── widgets.py         # 自定义控件（如结果展示表、日志区域等）
+│   ├── icons/             # 图标文件夹（.ico / .png）
+│   └── style/             # 样式文件（QSS 等）
+
+├── data/                  # 运行时数据保存（扫描历史/缓存等）
+│   └── scan_results.json
+
+├── tests/                 # 单元测试（可选）
+│   └── test_scanner.py
