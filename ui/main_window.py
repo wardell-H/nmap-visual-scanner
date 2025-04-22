@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
         input_layout.addWidget(label_profile)
 
         self.profile_box = QComboBox()
-        self.profile_box.addItems(["深度扫描", "快速扫描", "Ping 扫描"])
+        self.profile_box.addItems(["端口扫描", "快速扫描", "主机扫描"])
         input_layout.addWidget(self.profile_box)
 
         self.scan_button = QPushButton("开始扫描")
@@ -141,15 +141,15 @@ class MainWindow(QMainWindow):
         self.output_tabs["Nmap Output"].append(f"📡 正在扫描目标：{target}，配置：{profile}")
 
         # 判断是主机扫描还是端口扫描
-        if profile == "Ping 扫描":
+        if profile == "主机扫描":
             self.thread = ScanThread(target, scan_type="host")
             self.thread.result_signal.connect(self.display_ping_results)
-        elif profile == "深度扫描":
+        elif profile == "端口扫描":
             self.thread = ScanThread(target, scan_type="port")
             self.thread.result_signal.connect(self.display_port_results)
         else:  # 默认快速扫描，做一个简单的端口扫描
-            self.thread = ScanThread(target, scan_type="port", scan_ports="80,443")
-
+            self.thread = ScanThread(target, scan_type="quick", scan_ports="80,443")
+            self.thread.result_signal.connect(self.display_port_results)
         
         self.thread.start()
 
@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
                 if item.get("hostname"):
                     line += f" ({item['hostname']})"
                 self.output_tabs["Nmap Output"].append(line)
-                
+
     def display_port_results(self, results):
         self.output_tabs["Nmap Output"].append("✅ 扫描完成，结果如下：\n")
         for item in results:
@@ -194,4 +194,8 @@ class ScanThread(QThread):
         elif self.scan_type == "port":
             # 执行端口扫描
             results = scan_port(self.target)
+        elif self.scan_type == "quick":
+            # 执行快速扫描，默认扫描 80 和 443 端口
+            ports = [80, 443]
+            results = scan_port(self.target, ports=ports)
         self.result_signal.emit(results)
